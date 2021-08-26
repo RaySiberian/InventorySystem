@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ada34c1353f5df47bd310c10606c8d2, type: 3}
   m_Name: FoodObject
   m_EditorClassIdentifier: 
-  Id: -1
+  Data:
+    ID: 0
+    Name: 
+    Amount: 1
   MaxStuckSize: -1
   StackAble: 1
   UISprite: {fileID: 0}

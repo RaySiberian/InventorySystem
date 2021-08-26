@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99584f7d719e09b4989289de9d039395, type: 3}
   m_Name: FeetEquipmentObject
   m_EditorClassIdentifier: 
-  Id: -1
+  Data:
+    ID: 1
+    Name: 
+    Amount: 1
   MaxStuckSize: -1
   StackAble: 0
   UISprite: {fileID: 0}

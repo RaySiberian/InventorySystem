@@ -10,7 +10,9 @@ public class Item
         ID = itemObject.Data.ID;
         Name = itemObject.name;
     }
-
+    
+    //TODO Добавить конструктор с WorldItem
+    
     public Item(int id)
     {
         ID = id;
@@ -20,5 +22,6 @@ public class Item
     {
         ID = -1;
         Name = "";
+        Amount = 1;
     }
 }

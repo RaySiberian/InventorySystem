@@ -10,28 +10,71 @@ public class Container : MonoBehaviour
     public InventoryDatabase Database;
     public SerializableContainer SerializableContainer;
     public ItemObject test;
+    public ItemObject test1;
     public Item[] Storage => SerializableContainer.AllItems;
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.F1))
         {
             AddItem(test);
+            AddItem(test1);
         }
     }
 
     public void AddItem(ItemObject addingItemObject)
     {
-        for (int i = 0; i < Storage.Length; i++)
+        if (!CheckItemInInventory(addingItemObject) || !addingItemObject.StackAble)
         {
-            if (IsSlotFree(Storage[i]))
+            for (int i = 0; i < Storage.Length; i++)
             {
-                Storage[i] = new Item(addingItemObject);
-                break;
+                if (IsSlotFree(Storage[i]))
+                {
+                    Storage[i] = new Item(addingItemObject);
+                    break;
+                }
             }
-           
+        }
+        else
+        {
+            Item itemForStack = FindObjectInInventory(addingItemObject);
+            AddAmount(itemForStack,addingItemObject);
         }
     }
 
+    public bool CheckForStacking(ItemObject addingItemObject)
+    {
+        return addingItemObject.StackAble;
+    }
+
+    public bool CheckItemInInventory(ItemObject itemObject)
+    {
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i].ID == itemObject.Data.ID)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Item FindObjectInInventory(ItemObject itemObject)
+    {
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i].ID == itemObject.Data.ID)
+            {
+                return Storage[i];
+            }
+        }
+        return null;
+    }
+
+    public void AddAmount(Item addToItem,ItemObject itemObject)
+    {
+        addToItem.Amount += itemObject.Data.Amount;
+    }
+    
     public bool IsSlotFree(Item itemToCheck)
     {
         return itemToCheck.ID == -1;
