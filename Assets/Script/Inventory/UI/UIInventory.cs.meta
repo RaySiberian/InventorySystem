@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 73eb9fae01ae64a4ca16a3c210b4c9ab
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - database: {fileID: 11400000, guid: 9077530be5e9d374a903316496bdd731, type: 2}
+  - inventoryCellPrefab: {fileID: 3684708771145266698, guid: 3d12aec4935c8704782d62c31099dbfd, type: 3}
+  - playerContainer: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

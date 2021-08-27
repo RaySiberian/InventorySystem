@@ -12,6 +12,7 @@ public class Container : MonoBehaviour
     public ItemObject test;
     public ItemObject test1;
     public Item[] Storage => SerializableContainer.AllItems;
+    public event Action ContainerUpdated; 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.F1))
@@ -39,8 +40,45 @@ public class Container : MonoBehaviour
             Item itemForStack = FindObjectInInventory(addingItemObject);
             AddAmount(itemForStack,addingItemObject);
         }
+        ContainerUpdated?.Invoke();
     }
 
+    public void RemoveItem(Item item)
+    {
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i] == item)
+            {
+                Storage[i] = new Item();
+            }
+        }
+        ContainerUpdated?.Invoke();
+    }
+
+    public void SwapItems(Item item1, Item item2)
+    {
+        int pos1 = 0;
+        int pos2 = 0;
+        
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i] == item1)
+            {
+                pos1 = i;
+            }
+            
+            if (Storage[i] == item2)
+            {
+                pos2 = i;
+            }
+        }
+        
+        Storage[pos1] = item2;
+        Storage[pos2] = item1;
+        
+        ContainerUpdated?.Invoke();
+    }
+    
     public bool CheckForStacking(ItemObject addingItemObject)
     {
         return addingItemObject.StackAble;
@@ -104,5 +142,6 @@ public class Container : MonoBehaviour
             JsonUtility.FromJsonOverwrite(bf.Deserialize(file).ToString(),this);
             file.Close();
         }
+        ContainerUpdated?.Invoke();
     }
 }
