@@ -9,15 +9,17 @@ public class Container : MonoBehaviour
 {
     private string savePath;
     public InventoryDatabase Database;
-    public SerializableContainer SerializableContainer;
+    public SerializableContainer EquipmentContainer;
+    public SerializableContainer InventoryContainer;
     public ItemObject test;
     public ItemObject test1;
-    public Item[] Storage => SerializableContainer.AllItems;
+    public Item[] InventoryStorage => InventoryContainer.Inventory;
+    public Item[] EquipmentStorage => EquipmentContainer.Inventory;
     public event Action ContainerUpdated;
 
     public int FreeSlots
     {
-        get { return Storage.Count(t => t.ID == -1); }
+        get { return InventoryStorage.Count(t => t.ID == -1); }
     }
 
     private void Update()
@@ -26,12 +28,12 @@ public class Container : MonoBehaviour
         {
             AddItem(test);
             AddItem(test1);
+            InventoryContainer.Inventory[0] = new Item(test1);
         }
 
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            //Debug.Log(IsItemContains(test));
-            Debug.Log(GetStack(test));
+            Debug.Log(EquipmentStorage[0]);
         }
     }
     
@@ -65,7 +67,7 @@ public class Container : MonoBehaviour
         {
             if (IsStackInInventory(itemObject))
             {
-                Storage[GetStack(itemObject)].Amount += 1;
+                InventoryStorage[GetStack(itemObject)].Amount += 1;
             }
             else
             {
@@ -77,7 +79,7 @@ public class Container : MonoBehaviour
         {
             if (IsStackInInventory(itemObject))
             {
-                Storage[GetStack(itemObject)].Amount += 1;
+                InventoryStorage[GetStack(itemObject)].Amount += 1;
             }
             else
             {
@@ -102,9 +104,9 @@ public class Container : MonoBehaviour
     {
         Item temp = FindItemInInventory(itemObject);
         
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < InventoryStorage.Length; i++)
         {
-            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
+            if (InventoryStorage[i].ID == temp.ID && InventoryStorage[i].Amount != itemObject.MaxStuckSize)
             {
                 return true;
             }
@@ -117,9 +119,9 @@ public class Container : MonoBehaviour
     private int GetStack(ItemObject itemObject)
     {
         Item temp = FindItemInInventory(itemObject);
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < InventoryStorage.Length; i++)
         {
-            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
+            if (InventoryStorage[i].ID == temp.ID && InventoryStorage[i].Amount != itemObject.MaxStuckSize)
             {
                 return i;
             }
@@ -130,16 +132,16 @@ public class Container : MonoBehaviour
     
     private void AddNewItem(ItemObject itemObject)
     {
-        Storage[GetFreeSlot()] = new Item(itemObject);
+        InventoryStorage[GetFreeSlot()] = new Item(itemObject);
     }
 
     public void RemoveItem(Item item)
     {
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < InventoryStorage.Length; i++)
         {
-            if (Storage[i] == item)
+            if (InventoryStorage[i] == item)
             {
-                Storage[i] = new Item();
+                InventoryStorage[i] = new Item();
             }
         }
 
@@ -151,40 +153,40 @@ public class Container : MonoBehaviour
         int pos1 = 0;
         int pos2 = 0;
 
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < InventoryStorage.Length; i++)
         {
-            if (Storage[i] == item1)
+            if (InventoryStorage[i] == item1)
             {
                 pos1 = i;
             }
 
-            if (Storage[i] == item2)
+            if (InventoryStorage[i] == item2)
             {
                 pos2 = i;
             }
         }
 
-        Storage[pos1] = item2;
-        Storage[pos2] = item1;
+        InventoryStorage[pos1] = item2;
+        InventoryStorage[pos2] = item1;
 
         ContainerUpdated?.Invoke();
     }
 
     private bool IsItemContains(ItemObject itemObject)
     {
-        return Storage.Any(t => t.ID == itemObject.Data.ID);
+        return InventoryStorage.Any(t => t.ID == itemObject.Data.ID);
     }
 
     private Item FindItemInInventory(ItemObject itemObject)
     {
-        return Storage.FirstOrDefault(t => t.ID == itemObject.Data.ID);
+        return InventoryStorage.FirstOrDefault(t => t.ID == itemObject.Data.ID);
     }
 
     private int GetFreeSlot()
     {
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < InventoryStorage.Length; i++)
         {
-            if (Storage[i].ID == -1)
+            if (InventoryStorage[i].ID == -1)
             {
                 return i;
             }

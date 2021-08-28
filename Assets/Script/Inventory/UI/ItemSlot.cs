@@ -9,14 +9,16 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public Item Item;
     public TextMeshProUGUI InventoryCellText;
     public Image InventoryCellIcon;
+    public SlotType SlotType;
     public event Action<ItemSlot, ItemSlot> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
     
     private CanvasGroup canvasGroup;
-
+    private Canvas canvas;
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
+        canvas = FindObjectOfType<Canvas>();
     }
     
     //Нажатие
@@ -26,7 +28,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         
         var rt = MouseData.Icon.AddComponent<RectTransform>();
         rt.sizeDelta = new Vector2(50, 50);
-        MouseData.Icon.transform.SetParent(transform);
+        MouseData.Icon.transform.SetParent(canvas.transform);
 
         var image = MouseData.Icon.AddComponent<Image>();
         image.sprite = InventoryCellIcon.sprite;
@@ -47,6 +49,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     {
         canvasGroup.blocksRaycasts = true;
         Destroy(MouseData.Icon);
+
         if (eventData.pointerEnter == null)
         {
             ItemRemoved?.Invoke(MouseData.FromSlot);
@@ -64,6 +67,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Дроп
     public void OnDrop(PointerEventData eventData)
     {
+        Debug.Log(eventData.pointerEnter);
         MouseData.ToSlot = this;
         ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
         Destroy(MouseData.Icon);
@@ -83,4 +87,18 @@ public static class MouseData
         ToSlot = null;
         Icon = null;
     }
+}
+
+public enum SlotType
+{
+    Head = 0,
+    Torso = 1,
+    Lags = 2,
+    Feet = 3,
+    Hands = 4,
+    Fingers = 5,
+    Neck = 6,
+    Weapon = 7,
+    Shield = 8,
+    All = 9
 }

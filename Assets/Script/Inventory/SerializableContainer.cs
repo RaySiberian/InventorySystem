@@ -1,5 +1,6 @@
 [System.Serializable]
 public class SerializableContainer
 {
-    public Item[] AllItems = new Item[16];
+    public Item[] Inventory = new Item[16];
+    public Item[] Equipment = new Item[8];
 }

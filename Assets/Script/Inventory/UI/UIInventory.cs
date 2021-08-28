@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class UIInventory : MonoBehaviour
@@ -8,12 +7,13 @@ public class UIInventory : MonoBehaviour
     [SerializeField] private Container playerContainer;
     [SerializeField] private Sprite empty;
     public int InventoryCellsCount;
-    public ItemSlot[] Slots;
+    public ItemSlot[] InventorySlots;
+    public ItemSlot[] EquipmentSlots;
     
     private void Start()
     {
-        InventoryCellsCount = playerContainer.Storage.Length;
-        Slots = new ItemSlot[InventoryCellsCount];
+        InventoryCellsCount = playerContainer.InventoryStorage.Length;
+        InventorySlots = new ItemSlot[InventoryCellsCount];
         CreateInventoryCells();
     }
 
@@ -32,7 +32,7 @@ public class UIInventory : MonoBehaviour
 
     private void OnDisable()
     {
-        foreach (var slot in Slots)
+        foreach (var slot in InventorySlots)
         {
             slot.ItemNeedSwap -= SwapItemOnInterface;
             slot.ItemRemoved -= RemoveItemInContainer;
@@ -43,12 +43,13 @@ public class UIInventory : MonoBehaviour
 
     private void CreateInventoryCells()
     {
-        for (int i = 0; i < Slots.Length; i++)
+        for (int i = 0; i < InventorySlots.Length; i++)
         {
             GameObject cell = Instantiate(inventoryCellPrefab, this.transform);
-            Slots[i] = cell.GetComponent<ItemSlot>();
-            Slots[i].ItemNeedSwap += SwapItemOnInterface;
-            Slots[i].ItemRemoved += RemoveItemInContainer;
+            cell.GetComponent<ItemSlot>().SlotType = SlotType.All;
+            InventorySlots[i] = cell.GetComponent<ItemSlot>();
+            InventorySlots[i].ItemNeedSwap += SwapItemOnInterface;
+            InventorySlots[i].ItemRemoved += RemoveItemInContainer;
         }
     }
 
@@ -65,12 +66,19 @@ public class UIInventory : MonoBehaviour
     
     private void UpdateCellsData()
     {
-        for (int i = 0; i < Slots.Length; i++)
+        for (int i = 0; i < InventorySlots.Length; i++)
         {
-            Slots[i].Item = playerContainer.Storage[i];
-            SetAmount(Slots[i],playerContainer.Storage[i]);
-            SetSpriteByDatabase(Slots[i]);
+            InventorySlots[i].Item = playerContainer.InventoryStorage[i];
+            SetAmount(InventorySlots[i],playerContainer.InventoryStorage[i]);
+            SetSpriteByDatabase(InventorySlots[i]);
         }
+
+        // for (int i = 0; i < EquipmentSlots.Length; i++)
+        // {
+        //     InventorySlots[i].Item = playerContainer.InventoryStorage[i];
+        //     SetAmount(InventorySlots[i],playerContainer.InventoryStorage[i]);
+        //     SetSpriteByDatabase(InventorySlots[i]);
+        // }
     }
 
     private void SetSpriteByDatabase(ItemSlot itemSlot)
