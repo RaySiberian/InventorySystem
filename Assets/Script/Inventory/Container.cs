@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
@@ -12,7 +13,13 @@ public class Container : MonoBehaviour
     public ItemObject test;
     public ItemObject test1;
     public Item[] Storage => SerializableContainer.AllItems;
-    public event Action ContainerUpdated; 
+    public event Action ContainerUpdated;
+
+    public int FreeSlots
+    {
+        get { return Storage.Count(t => t.ID == -1); }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.F1))
@@ -20,27 +27,110 @@ public class Container : MonoBehaviour
             AddItem(test);
             AddItem(test1);
         }
-    }
 
-    public void AddItem(ItemObject addingItemObject)
-    {
-        if (!CheckItemInInventory(addingItemObject) || !addingItemObject.StackAble)
+        if (Input.GetKeyDown(KeyCode.F2))
         {
-            for (int i = 0; i < Storage.Length; i++)
+            //Debug.Log(IsItemContains(test));
+            Debug.Log(GetStack(test));
+        }
+    }
+    
+    public void AddItem(ItemObject itemObject)
+    {
+        if (itemObject.StackAble)
+        {
+            //Цикл заглушка, чтоб предмет добовлялся по одному
+            for (int i = 0; i < itemObject.Data.Amount; i++)
             {
-                if (IsSlotFree(Storage[i]))
-                {
-                    Storage[i] = new Item(addingItemObject);
-                    break;
-                }
+                AddStackableAmount(itemObject);
             }
         }
         else
         {
-            Item itemForStack = FindObjectInInventory(addingItemObject);
-            AddAmount(itemForStack,addingItemObject);
+            AddUnStackableAmount(itemObject);
         }
+
         ContainerUpdated?.Invoke();
+    }
+
+    private void AddStackableAmount(ItemObject itemObject)
+    {
+        if (FreeSlots != 0 && !IsItemContains(itemObject))
+        {
+            AddNewItem(itemObject);
+            return;
+        }
+
+        if (FreeSlots == 0)
+        {
+            if (IsStackInInventory(itemObject))
+            {
+                Storage[GetStack(itemObject)].Amount += 1;
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        if (FreeSlots != 0)
+        {
+            if (IsStackInInventory(itemObject))
+            {
+                Storage[GetStack(itemObject)].Amount += 1;
+            }
+            else
+            {
+                AddNewItem(itemObject);
+            }
+        }
+
+    }
+    
+    private void AddUnStackableAmount(ItemObject itemObject)
+    {
+        if (FreeSlots == 0)
+        {
+            return;
+        }
+
+        AddNewItem(itemObject);
+    }
+    
+    //Проверка есть ли неполный стак данного предмета
+    private bool IsStackInInventory(ItemObject itemObject)
+    {
+        Item temp = FindItemInInventory(itemObject);
+        
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    //Получение ID неполного стака данного предмета
+    private int GetStack(ItemObject itemObject)
+    {
+        Item temp = FindItemInInventory(itemObject);
+        for (int i = 0; i < Storage.Length; i++)
+        {
+            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+    
+    private void AddNewItem(ItemObject itemObject)
+    {
+        Storage[GetFreeSlot()] = new Item(itemObject);
     }
 
     public void RemoveItem(Item item)
@@ -52,6 +142,7 @@ public class Container : MonoBehaviour
                 Storage[i] = new Item();
             }
         }
+
         ContainerUpdated?.Invoke();
     }
 
@@ -59,66 +150,50 @@ public class Container : MonoBehaviour
     {
         int pos1 = 0;
         int pos2 = 0;
-        
+
         for (int i = 0; i < Storage.Length; i++)
         {
             if (Storage[i] == item1)
             {
                 pos1 = i;
             }
-            
+
             if (Storage[i] == item2)
             {
                 pos2 = i;
             }
         }
-        
+
         Storage[pos1] = item2;
         Storage[pos2] = item1;
-        
+
         ContainerUpdated?.Invoke();
     }
-    
-    public bool CheckForStacking(ItemObject addingItemObject)
+
+    private bool IsItemContains(ItemObject itemObject)
     {
-        return addingItemObject.StackAble;
+        return Storage.Any(t => t.ID == itemObject.Data.ID);
     }
 
-    public bool CheckItemInInventory(ItemObject itemObject)
+    private Item FindItemInInventory(ItemObject itemObject)
+    {
+        return Storage.FirstOrDefault(t => t.ID == itemObject.Data.ID);
+    }
+
+    private int GetFreeSlot()
     {
         for (int i = 0; i < Storage.Length; i++)
         {
-            if (Storage[i].ID == itemObject.Data.ID)
+            if (Storage[i].ID == -1)
             {
-                return true;
+                return i;
             }
         }
-        return false;
+
+        return -1;
     }
 
-    public Item FindObjectInInventory(ItemObject itemObject)
-    {
-        for (int i = 0; i < Storage.Length; i++)
-        {
-            if (Storage[i].ID == itemObject.Data.ID)
-            {
-                return Storage[i];
-            }
-        }
-        return null;
-    }
 
-    public void AddAmount(Item addToItem,ItemObject itemObject)
-    {
-        addToItem.Amount += itemObject.Data.Amount;
-    }
-    
-    public bool IsSlotFree(Item itemToCheck)
-    {
-        return itemToCheck.ID == -1;
-    }
-    
-    
     [ContextMenu("Save")]
     public void Save()
     {
@@ -126,9 +201,8 @@ public class Container : MonoBehaviour
         string saveData = JsonUtility.ToJson(this, true);
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Create(string.Concat(Application.persistentDataPath, savePath));
-        bf.Serialize(file,saveData);
+        bf.Serialize(file, saveData);
         file.Close();
-        
     }
 
 
@@ -138,10 +212,11 @@ public class Container : MonoBehaviour
         if (File.Exists(string.Concat(Application.persistentDataPath, savePath)))
         {
             BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(string.Concat(Application.persistentDataPath, savePath),FileMode.Open);
-            JsonUtility.FromJsonOverwrite(bf.Deserialize(file).ToString(),this);
+            FileStream file = File.Open(string.Concat(Application.persistentDataPath, savePath), FileMode.Open);
+            JsonUtility.FromJsonOverwrite(bf.Deserialize(file).ToString(), this);
             file.Close();
         }
+
         ContainerUpdated?.Invoke();
     }
 }

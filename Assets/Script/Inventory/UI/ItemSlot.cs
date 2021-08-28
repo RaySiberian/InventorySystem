@@ -47,7 +47,6 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     {
         canvasGroup.blocksRaycasts = true;
         Destroy(MouseData.Icon);
-        Debug.Log(eventData.pointerEnter);
         if (eventData.pointerEnter == null)
         {
             ItemRemoved?.Invoke(MouseData.FromSlot);
