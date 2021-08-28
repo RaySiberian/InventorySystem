@@ -17,7 +17,5 @@ public enum EquipmentType
     Feet = 3,
     Hands = 4,
     Fingers = 5,
-    Neck = 6,
-    Weapon = 7,
-    Shield = 8
+    Neck = 6
 }

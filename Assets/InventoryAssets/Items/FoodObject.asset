@@ -15,8 +15,8 @@ MonoBehaviour:
   Data:
     ID: 0
     Name: 
-    Amount: 3
-  MaxStuckSize: 5
+    Amount: 1
+  MaxStuckSize: 4
   StackAble: 1
   UISprite: {fileID: 2682550535439314684, guid: 13cb1d33abeeba14f97638a9413ea633, type: 3}
   WorldPrefab: {fileID: 0}
