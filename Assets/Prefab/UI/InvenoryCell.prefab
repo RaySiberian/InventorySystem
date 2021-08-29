@@ -306,6 +306,7 @@ MonoBehaviour:
     Amount: 1
   InventoryCellText: {fileID: 6145049569363213492}
   InventoryCellIcon: {fileID: 8045227915867817505}
+  Type: 9
 --- !u!225 &6930176807280483859
 CanvasGroup:
   m_ObjectHideFlags: 0
