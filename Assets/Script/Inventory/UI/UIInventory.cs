@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class UIInventory : MonoBehaviour
 {
-    [SerializeField] private InventoryDatabase database;
+    [SerializeField] private ItemObjectsDatabase database;
     [SerializeField] private GameObject inventoryCellPrefab;
     [SerializeField] private Container playerContainer;
     [SerializeField] private Sprite empty;
@@ -12,7 +12,7 @@ public class UIInventory : MonoBehaviour
     
     private void Start()
     {
-        InventoryCellsCount = playerContainer.Storage.Length;
+        InventoryCellsCount = playerContainer.Inventory.Length;
         Slots = new ItemSlot[InventoryCellsCount];
         CreateInventoryCells();
     }
@@ -46,6 +46,7 @@ public class UIInventory : MonoBehaviour
         for (int i = 0; i < Slots.Length; i++)
         {
             GameObject cell = Instantiate(inventoryCellPrefab, this.transform);
+            cell.GetComponent<ItemSlot>().Type = SlotType.All;
             Slots[i] = cell.GetComponent<ItemSlot>();
             Slots[i].ItemNeedSwap += SwapItemOnInterface;
             Slots[i].ItemRemoved += RemoveItemInContainer;
@@ -67,8 +68,8 @@ public class UIInventory : MonoBehaviour
     {
         for (int i = 0; i < Slots.Length; i++)
         {
-            Slots[i].Item = playerContainer.Storage[i];
-            SetAmount(Slots[i],playerContainer.Storage[i]);
+            Slots[i].Item = playerContainer.Inventory[i];
+            SetAmount(Slots[i],playerContainer.Inventory[i]);
             SetSpriteByDatabase(Slots[i]);
         }
     }

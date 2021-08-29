@@ -8,16 +8,18 @@ using UnityEngine;
 public class Container : MonoBehaviour
 {
     private string savePath;
-    public InventoryDatabase Database;
-    public SerializableContainer SerializableContainer;
+    public ItemObjectsDatabase Database;
+    public SerializableContainer InventoryContainer;
+    public SerializableContainer EquipmentContainer;
     public ItemObject test;
     public ItemObject test1;
-    public Item[] Storage => SerializableContainer.AllItems;
+    public Item[] Inventory => InventoryContainer.Inventory;
+    public Item[] Equipment => InventoryContainer.Equipment;
     public event Action ContainerUpdated;
 
     public int FreeSlots
     {
-        get { return Storage.Count(t => t.ID == -1); }
+        get { return Inventory.Count(t => t.ID == -1); }
     }
 
     private void Update()
@@ -30,11 +32,15 @@ public class Container : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F2))
         {
-            //Debug.Log(IsItemContains(test));
-            Debug.Log(GetStack(test));
+            SetEquipment(test1.Data);
+        }
+
+        if (Input.GetKeyDown(KeyCode.F3))
+        {
+            Debug.Log(Database.GetItemByID[Inventory[0].ID]);
         }
     }
-    
+
     public void AddItem(ItemObject itemObject)
     {
         if (itemObject.StackAble)
@@ -65,7 +71,7 @@ public class Container : MonoBehaviour
         {
             if (IsStackInInventory(itemObject))
             {
-                Storage[GetStack(itemObject)].Amount += 1;
+                Inventory[GetStack(itemObject)].Amount += 1;
             }
             else
             {
@@ -77,16 +83,15 @@ public class Container : MonoBehaviour
         {
             if (IsStackInInventory(itemObject))
             {
-                Storage[GetStack(itemObject)].Amount += 1;
+                Inventory[GetStack(itemObject)].Amount += 1;
             }
             else
             {
                 AddNewItem(itemObject);
             }
         }
-
     }
-    
+
     private void AddUnStackableAmount(ItemObject itemObject)
     {
         if (FreeSlots == 0)
@@ -96,30 +101,22 @@ public class Container : MonoBehaviour
 
         AddNewItem(itemObject);
     }
-    
+
     //Проверка есть ли неполный стак данного предмета
     private bool IsStackInInventory(ItemObject itemObject)
     {
         Item temp = FindItemInInventory(itemObject);
-        
-        for (int i = 0; i < Storage.Length; i++)
-        {
-            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
-            {
-                return true;
-            }
-        }
 
-        return false;
+        return Inventory.Any(item => item.ID == temp.ID && item.Amount != itemObject.MaxStuckSize);
     }
-    
+
     //Получение ID неполного стака данного предмета
     private int GetStack(ItemObject itemObject)
     {
         Item temp = FindItemInInventory(itemObject);
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < Inventory.Length; i++)
         {
-            if (Storage[i].ID == temp.ID && Storage[i].Amount != itemObject.MaxStuckSize)
+            if (Inventory[i].ID == temp.ID && Inventory[i].Amount != itemObject.MaxStuckSize)
             {
                 return i;
             }
@@ -127,19 +124,19 @@ public class Container : MonoBehaviour
 
         return -1;
     }
-    
+
     private void AddNewItem(ItemObject itemObject)
     {
-        Storage[GetFreeSlot()] = new Item(itemObject);
+        Inventory[GetFreeSlot()] = new Item(itemObject);
     }
 
     public void RemoveItem(Item item)
     {
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < Inventory.Length; i++)
         {
-            if (Storage[i] == item)
+            if (Inventory[i] == item)
             {
-                Storage[i] = new Item();
+                Inventory[i] = new Item();
             }
         }
 
@@ -151,40 +148,45 @@ public class Container : MonoBehaviour
         int pos1 = 0;
         int pos2 = 0;
 
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < Inventory.Length; i++)
         {
-            if (Storage[i] == item1)
+            if (Inventory[i] == item1)
             {
                 pos1 = i;
             }
 
-            if (Storage[i] == item2)
+            if (Inventory[i] == item2)
             {
                 pos2 = i;
             }
         }
 
-        Storage[pos1] = item2;
-        Storage[pos2] = item1;
+        Inventory[pos1] = item2;
+        Inventory[pos2] = item1;
 
         ContainerUpdated?.Invoke();
     }
 
     private bool IsItemContains(ItemObject itemObject)
     {
-        return Storage.Any(t => t.ID == itemObject.Data.ID);
+        return Inventory.Any(item => item.ID == itemObject.Data.ID);
     }
 
     private Item FindItemInInventory(ItemObject itemObject)
     {
-        return Storage.FirstOrDefault(t => t.ID == itemObject.Data.ID);
+        return Inventory.FirstOrDefault(item => item.ID == itemObject.Data.ID);
+    }
+
+    private ItemObject FindObjectInDatabase(Item item)
+    {
+        return Database.GetItemByID[item.ID];
     }
 
     private int GetFreeSlot()
     {
-        for (int i = 0; i < Storage.Length; i++)
+        for (int i = 0; i < Inventory.Length; i++)
         {
-            if (Storage[i].ID == -1)
+            if (Inventory[i].ID == -1)
             {
                 return i;
             }
@@ -193,6 +195,34 @@ public class Container : MonoBehaviour
         return -1;
     }
 
+    public int GetEquipmentSlot(Item item)
+    {
+        ItemObject itemObject = FindObjectInDatabase(item);
+        EquipmentObject equip = (EquipmentObject)itemObject;
+        return equip.EquipmentType switch
+        {
+            EquipmentType.Head => 0,
+            EquipmentType.Torso => 1,
+            EquipmentType.Lags => 2,
+            EquipmentType.Feet => 3,
+            EquipmentType.Hands => 4,
+            EquipmentType.Fingers => 5,
+            EquipmentType.Neck => 6,
+            EquipmentType.Weapon => 7,
+            EquipmentType.Shield => 8,
+            _ => -1
+        };
+    }
+
+    public void SetEquipment(Item item)
+    {
+        Equipment[GetEquipmentSlot(item)] = item;
+    }
+
+    public void RemoveEquipment(Item item)
+    {
+        Equipment[GetEquipmentSlot(item)] = new Item();
+    }
 
     [ContextMenu("Save")]
     public void Save()
