@@ -10,10 +10,10 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public Item Item;
     public TextMeshProUGUI InventoryCellText;
     public Image InventoryCellIcon;
-    public EquipmentType Type;
-    public event Action<ItemSlot, ItemSlot> ItemSwapInventory;
+    public SlotType Type;
+    public event Action<ItemSlot, ItemSlot> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
-    public event Action<ItemSlot, ItemSlot> ItemSawpContainer; 
+    
     private CanvasGroup canvasGroup;
     private Canvas canvas;
     private void Awake()
@@ -37,7 +37,6 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         MouseData.Icon.GetComponent<RectTransform>().position = Input.mousePosition;
 
         MouseData.FromSlot = this;
-        MouseData.FromSlotType = this.Type;
     }
 
     //Начало движения
@@ -69,10 +68,8 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Дроп
     public void OnDrop(PointerEventData eventData)
     {
-        MouseData.FromSlotType = eventData.pointerEnter.gameObject.GetComponent<ItemSlot>().Type;
-        Debug.Log(eventData.pointerEnter.gameObject.GetComponent<ItemSlot>().Type);
-        //MouseData.ToSlot = this;
-        ItemSwapInventory?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
+        MouseData.ToSlot = this;
+        ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
         Destroy(MouseData.Icon);
         MouseData.ClearData();
     }
@@ -81,9 +78,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
 public static class MouseData
 {
     public static ItemSlot FromSlot;
-    public static EquipmentType FromSlotType;
     public static ItemSlot ToSlot;
-    public static EquipmentType ToSlotType;
     public static GameObject Icon;
 
     public static void ClearData()
@@ -91,7 +86,19 @@ public static class MouseData
         FromSlot = null;
         ToSlot = null;
         Icon = null;
-        FromSlotType = EquipmentType.All;
-        ToSlotType = EquipmentType.All;
     }
+}
+
+public enum SlotType
+{
+    Head = 0,
+    Torso = 1,
+    Lags = 2,
+    Feet = 3,
+    Hands = 4,
+    Fingers = 5,
+    Neck = 6,
+    Weapon = 7,
+    Shield = 8,
+    All = 9
 }

@@ -8,13 +8,12 @@ public class UIInventory : MonoBehaviour
     [SerializeField] private Container playerContainer;
     [SerializeField] private Sprite empty;
     public int InventoryCellsCount;
-    public ItemSlot[] InventorySlots;
-    public ItemSlot[] EquipmentSlots;
+    public ItemSlot[] Slots;
     
     private void Start()
     {
         InventoryCellsCount = playerContainer.Inventory.Length;
-        InventorySlots = new ItemSlot[InventoryCellsCount];
+        Slots = new ItemSlot[InventoryCellsCount];
         CreateInventoryCells();
     }
 
@@ -33,9 +32,9 @@ public class UIInventory : MonoBehaviour
 
     private void OnDisable()
     {
-        foreach (var slot in InventorySlots)
+        foreach (var slot in Slots)
         {
-            slot.ItemSwapInventory -= SwapInventoryItemOnInterface;
+            slot.ItemNeedSwap -= SwapItemOnInterface;
             slot.ItemRemoved -= RemoveItemInContainer;
         }
 
@@ -44,13 +43,13 @@ public class UIInventory : MonoBehaviour
 
     private void CreateInventoryCells()
     {
-        for (int i = 0; i < InventorySlots.Length; i++)
+        for (int i = 0; i < Slots.Length; i++)
         {
             GameObject cell = Instantiate(inventoryCellPrefab, this.transform);
-            cell.GetComponent<ItemSlot>().Type = EquipmentType.All;
-            InventorySlots[i] = cell.GetComponent<ItemSlot>();
-            InventorySlots[i].ItemSwapInventory += SwapInventoryItemOnInterface;
-            InventorySlots[i].ItemRemoved += RemoveItemInContainer;
+            cell.GetComponent<ItemSlot>().Type = SlotType.All;
+            Slots[i] = cell.GetComponent<ItemSlot>();
+            Slots[i].ItemNeedSwap += SwapItemOnInterface;
+            Slots[i].ItemRemoved += RemoveItemInContainer;
         }
     }
 
@@ -59,7 +58,7 @@ public class UIInventory : MonoBehaviour
         playerContainer.RemoveItem(itemSlot.Item);
     }
     
-    private void SwapInventoryItemOnInterface(ItemSlot itemSlot1, ItemSlot itemSlot2)
+    private void SwapItemOnInterface(ItemSlot itemSlot1, ItemSlot itemSlot2)
     {
         playerContainer.SwapItems(itemSlot1.Item,itemSlot2.Item);
         UpdateCellsData();
@@ -67,18 +66,11 @@ public class UIInventory : MonoBehaviour
     
     private void UpdateCellsData()
     {
-        for (int i = 0; i < InventorySlots.Length; i++)
+        for (int i = 0; i < Slots.Length; i++)
         {
-            InventorySlots[i].Item = playerContainer.Inventory[i];
-            SetAmount(InventorySlots[i],playerContainer.Inventory[i]);
-            SetSpriteByDatabase(InventorySlots[i]);
-        }
-
-        for (int i = 0; i < EquipmentSlots.Length; i++)
-        {
-            EquipmentSlots[i].Item = playerContainer.Equipment[i];
-            SetAmount(EquipmentSlots[i],playerContainer.Equipment[i]);
-            SetSpriteByDatabase(EquipmentSlots[i]);
+            Slots[i].Item = playerContainer.Inventory[i];
+            SetAmount(Slots[i],playerContainer.Inventory[i]);
+            SetSpriteByDatabase(Slots[i]);
         }
     }
 
