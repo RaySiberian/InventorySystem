@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class UIInventory : MonoBehaviour
@@ -10,21 +9,7 @@ public class UIInventory : MonoBehaviour
     public int InventoryCellsCount;
     public ItemSlot[] InventorySlots;
     public ItemSlot[] EquipmentSlots;
-    private void Start()
-    {
-        InventoryCellsCount = playerContainer.Inventory.Length;
-        InventorySlots = new ItemSlot[InventoryCellsCount];
-        CreateInventoryCells();
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            UpdateCellsData();
-        }
-    }
-
+    
     private void OnEnable()
     {
         playerContainer.ContainerUpdated += UpdateCellsData;
@@ -46,6 +31,21 @@ public class UIInventory : MonoBehaviour
         }
         
         playerContainer.ContainerUpdated -= UpdateCellsData;
+    }
+    
+    private void Start()
+    {
+        InventoryCellsCount = playerContainer.Inventory.Length;
+        InventorySlots = new ItemSlot[InventoryCellsCount];
+        CreateInventoryCells();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F2))
+        {
+            UpdateCellsData();
+        }
     }
 
     private void CreateInventoryCells()
@@ -82,7 +82,7 @@ public class UIInventory : MonoBehaviour
 
     private void SwapItemOnInterface(ItemSlot fromSlot, ItemSlot toSlot)
     {
-        playerContainer.SwapItems(fromSlot.Item,toSlot.Item);
+        playerContainer.SwapItemsInInventory(fromSlot.Item,toSlot.Item);
         UpdateCellsData();
     }
 
@@ -90,27 +90,51 @@ public class UIInventory : MonoBehaviour
     {
         if (toSlot.Type != EquipmentType.All)
         {
-            ItemObject itemObject = null;
-            EquipmentObject equip = null;
             try
             {
-                itemObject = database.GetItemByID[fromSlot.Item.ID];
-                equip = (EquipmentObject)itemObject;
+                //Если передеваемый предмет является equipmentObject
+                ItemObject itemObject = database.GetItemByID[fromSlot.Item.ID];
+                EquipmentObject equip = (EquipmentObject)itemObject;
+                
                 if (equip.EquipmentType == toSlot.Type)
                 {
-                    playerContainer.SetEquipmentFromInventory(fromSlot.Item,toSlot.Item);
+                    playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                    return;
                 }
             }
-            catch
+            catch 
             {
-                Debug.Log("Ошибка приведения типов");
-            }
-            
-           
-            
-            
-            //Debug.Log($"fromSlot {fromSlot.Type}, toSlot{toSlot.Type}");
+                Debug.Log("Item is not Equipment");
+                return;
+            } 
         }
+
+        if (toSlot.Type == EquipmentType.All)
+        {   
+            //TODO проверка на пустой Item, сделать перегрузку сравнения
+            if (toSlot.Item.ID == -1)
+            {
+                playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                return;
+            }
+
+            try
+            {
+                //Если предмет инвентаря предмет является equipmentObject
+                ItemObject itemObject = database.GetItemByID[toSlot.Item.ID];
+                EquipmentObject equip = (EquipmentObject)itemObject;
+                
+                if (equip.EquipmentType == fromSlot.Type || toSlot.Item == new Item())
+                {
+                    playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                }
+            }
+            catch 
+            {
+                Debug.Log("Item is not Equipment");
+            } 
+        }
+
     }
     
     private void UpdateCellsData()

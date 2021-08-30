@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IDropHandler
+public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IDropHandler, IPointerUpHandler
 {
     public Item Item;
     public TextMeshProUGUI InventoryCellText;
@@ -13,9 +13,11 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public event Action<ItemSlot, ItemSlot> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
     public event Action<ItemSlot, ItemSlot> ItemSwapInEquipment;
-    
+
+    private bool isMoved;
     private CanvasGroup canvasGroup;
     private Canvas canvas;
+    
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
@@ -25,6 +27,9 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Нажатие
     public void OnPointerDown(PointerEventData eventData)
     {
+        isMoved = false;
+        
+        Debug.Log("Pointer Down");
         MouseData.Icon = new GameObject();
         
         var rt = MouseData.Icon.AddComponent<RectTransform>();
@@ -44,19 +49,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     {
         MouseData.Icon.GetComponent<RectTransform>().position = Input.mousePosition;
         canvasGroup.blocksRaycasts = false;
-    }
-    
-    //Отпуск кнопки
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        canvasGroup.blocksRaycasts = true;
-        Destroy(MouseData.Icon);
-        if (eventData.pointerEnter == null)
-        {
-            ItemRemoved?.Invoke(MouseData.FromSlot);
-            Destroy(MouseData.Icon);
-            MouseData.ClearData();
-        }
+        isMoved = true;
     }
     
     // Процесс движения
@@ -65,7 +58,17 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         MouseData.Icon.GetComponent<RectTransform>().position = Input.mousePosition;
     }
     
-    //Дроп
+    //Отжатие кнопки
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (!isMoved)
+        {
+            Destroy(MouseData.Icon);
+            MouseData.ClearData();
+        }
+    }
+    
+    //Дроп(отжатие кнопки, но вызывается раньше OnEndDrag)
     public void OnDrop(PointerEventData eventData)
     {
         MouseData.ToSlot = this;
@@ -82,6 +85,20 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         Destroy(MouseData.Icon);
         MouseData.ClearData();
     }
+    
+    //Отжатие кнопки для UI
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        canvasGroup.blocksRaycasts = true;
+        Destroy(MouseData.Icon);
+        if (eventData.pointerEnter == null)
+        {
+            ItemRemoved?.Invoke(MouseData.FromSlot);
+            Destroy(MouseData.Icon);
+            MouseData.ClearData();
+        }
+    }
+    
 }
 
 public static class MouseData

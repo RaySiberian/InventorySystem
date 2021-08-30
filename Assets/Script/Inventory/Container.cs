@@ -10,7 +10,6 @@ public class Container : MonoBehaviour
     private string savePath;
     public ItemObjectsDatabase Database;
     public SerializableContainer InventoryContainer;
-    public SerializableContainer EquipmentContainer;
     public ItemObject test;
     public ItemObject test1;
     public Item[] Inventory => InventoryContainer.Inventory;
@@ -26,8 +25,8 @@ public class Container : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F1))
         {
-            AddItem(test);
-            AddItem(test1);
+            AddItemInInventory(test);
+            AddItemInInventory(test1);
         }
 
         if (Input.GetKeyDown(KeyCode.F2))
@@ -41,7 +40,7 @@ public class Container : MonoBehaviour
         }
     }
 
-    public void AddItem(ItemObject itemObject)
+    public void AddItemInInventory(ItemObject itemObject)
     {
         if (itemObject.StackAble)
         {
@@ -130,6 +129,18 @@ public class Container : MonoBehaviour
         Inventory[GetFreeSlot()] = new Item(itemObject);
     }
 
+    private int FindItemArrayPosition(Item itemToFind)
+    {
+        for (int i = 0; i < Inventory.Length; i++)
+        {
+            if (Inventory[i] == itemToFind)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
     public void RemoveItemFromInventory(Item item)
     {
         for (int i = 0; i < Inventory.Length; i++)
@@ -143,7 +154,7 @@ public class Container : MonoBehaviour
         ContainerUpdated?.Invoke();
     }
 
-    public void SwapItems(Item item1, Item item2)
+    public void SwapItemsInInventory(Item item1, Item item2)
     {
         int pos1 = 0;
         int pos2 = 0;
@@ -171,7 +182,12 @@ public class Container : MonoBehaviour
     {
         return Inventory.Any(item => item.ID == itemObject.Data.ID);
     }
-
+    
+    private bool IsItemContains(Item item)
+    {
+        return Inventory.Any(t => t == item);
+    }
+    
     private Item FindItemInInventory(ItemObject itemObject)
     {
         return Inventory.FirstOrDefault(item => item.ID == itemObject.Data.ID);
@@ -227,12 +243,50 @@ public class Container : MonoBehaviour
         
     }
 
-    public void SetEquipmentFromInventory(Item equipmentItem, Item allItem)
+    public void SwapItemsInContainers(Item item1, Item item2)
     {
-        SetEquipment(equipmentItem);
-        RemoveItemFromInventory(equipmentItem);
-    }
+        Item inventoryItem;
+        Item equipmentItem;
+        Item empty = new Item();
+        //Если содержится, значит item1 - объект из инвентаря
+        if (IsItemContains(item1))
+        {
+            Debug.Log("Условие 1");
+            inventoryItem = item1;
+            equipmentItem = item2;
+        }
+        else
+        {
+            Debug.Log("Условие 2");
+            inventoryItem = item2;
+            equipmentItem = item1;
+        }
+
+        if (inventoryItem.ID == -1)
+        {
+           
+            RemoveEquipment(equipmentItem);
+            Inventory[FindItemArrayPosition(inventoryItem)] = equipmentItem;
+            ContainerUpdated?.Invoke();
+            return;
+        }
+
+        if (equipmentItem.ID == -1)
+        {
+         
+            SetEquipment(inventoryItem);
+            Inventory[FindItemArrayPosition(inventoryItem)] = new Item();
+            ContainerUpdated?.Invoke();
+            return;
+        }
+        
     
+        SetEquipment(inventoryItem);
+        Inventory[FindItemArrayPosition(inventoryItem)] = equipmentItem;
+        
+        ContainerUpdated?.Invoke();
+    }
+
     [ContextMenu("Save")]
     public void Save()
     {

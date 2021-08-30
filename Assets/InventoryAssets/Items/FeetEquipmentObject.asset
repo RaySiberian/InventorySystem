@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Data:
     ID: 1
-    Name: 
+    Name: FeetEquipmentObject
     Amount: 1
   MaxStuckSize: -1
   StackAble: 0
   UISprite: {fileID: -3082089127865695880, guid: 13cb1d33abeeba14f97638a9413ea633, type: 3}
   WorldPrefab: {fileID: 0}
   Type: 2
-  EquipmentType: 3
+  EquipmentType: 0
