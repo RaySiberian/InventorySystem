@@ -68,8 +68,13 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Дроп
     public void OnDrop(PointerEventData eventData)
     {
-        
         MouseData.ToSlot = this;
+
+        if (MouseData.FromSlot.Type != EquipmentType.All || MouseData.ToSlot.Type != EquipmentType.All)
+        {
+            ItemSwapInEquipment?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
+        }
+        
         if (MouseData.FromSlot.Type == EquipmentType.All && MouseData.ToSlot.Type == EquipmentType.All)
         {
             ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);

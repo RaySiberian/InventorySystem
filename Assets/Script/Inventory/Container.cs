@@ -130,7 +130,7 @@ public class Container : MonoBehaviour
         Inventory[GetFreeSlot()] = new Item(itemObject);
     }
 
-    public void RemoveItem(Item item)
+    public void RemoveItemFromInventory(Item item)
     {
         for (int i = 0; i < Inventory.Length; i++)
         {
@@ -195,7 +195,7 @@ public class Container : MonoBehaviour
         return -1;
     }
 
-    public int GetEquipmentSlot(Item item)
+    private int GetEquipmentSlot(Item item)
     {
         ItemObject itemObject = FindObjectInDatabase(item);
         EquipmentObject equip = (EquipmentObject)itemObject;
@@ -217,13 +217,22 @@ public class Container : MonoBehaviour
     public void SetEquipment(Item item)
     {
         Equipment[GetEquipmentSlot(item)] = item;
+        ContainerUpdated?.Invoke();
     }
 
     public void RemoveEquipment(Item item)
     {
         Equipment[GetEquipmentSlot(item)] = new Item();
+        ContainerUpdated?.Invoke();
+        
     }
 
+    public void SetEquipmentFromInventory(Item equipmentItem, Item allItem)
+    {
+        SetEquipment(equipmentItem);
+        RemoveItemFromInventory(equipmentItem);
+    }
+    
     [ContextMenu("Save")]
     public void Save()
     {

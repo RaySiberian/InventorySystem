@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class UIInventory : MonoBehaviour
@@ -35,8 +36,15 @@ public class UIInventory : MonoBehaviour
         {
             slot.ItemNeedSwap -= SwapItemOnInterface;
             slot.ItemRemoved -= RemoveItemInContainer;
+            slot.ItemSwapInEquipment -= SetItemsToEquipment;
         }
 
+        foreach (var slot in EquipmentSlots)
+        {
+            slot.ItemSwapInEquipment -= SetItemsToEquipment;
+            slot.ItemRemoved -= RemoveItemInContainer;
+        }
+        
         playerContainer.ContainerUpdated -= UpdateCellsData;
     }
 
@@ -49,19 +57,60 @@ public class UIInventory : MonoBehaviour
             InventorySlots[i] = cell.GetComponent<ItemSlot>();
             InventorySlots[i].ItemNeedSwap += SwapItemOnInterface;
             InventorySlots[i].ItemRemoved += RemoveItemInContainer;
+            InventorySlots[i].ItemSwapInEquipment += SetItemsToEquipment;
+        }
+
+        foreach (var slot in EquipmentSlots)
+        {
+            slot.ItemSwapInEquipment += SetItemsToEquipment;
+            slot.ItemRemoved += RemoveItemInContainer;
         }
     }
 
     private void RemoveItemInContainer(ItemSlot itemSlot)
     {
-        playerContainer.RemoveItem(itemSlot.Item);
+        if (itemSlot.Type == EquipmentType.All)
+        {
+            playerContainer.RemoveItemFromInventory(itemSlot.Item); 
+        }
+        else
+        {
+            playerContainer.RemoveEquipment(itemSlot.Item);
+        }
+        
     }
-    
+
     private void SwapItemOnInterface(ItemSlot fromSlot, ItemSlot toSlot)
     {
-        Debug.Log($"from slot {fromSlot.Type}, To slot {toSlot.Type}");
         playerContainer.SwapItems(fromSlot.Item,toSlot.Item);
         UpdateCellsData();
+    }
+
+    private void SetItemsToEquipment(ItemSlot fromSlot, ItemSlot toSlot)
+    {
+        if (toSlot.Type != EquipmentType.All)
+        {
+            ItemObject itemObject = null;
+            EquipmentObject equip = null;
+            try
+            {
+                itemObject = database.GetItemByID[fromSlot.Item.ID];
+                equip = (EquipmentObject)itemObject;
+                if (equip.EquipmentType == toSlot.Type)
+                {
+                    playerContainer.SetEquipmentFromInventory(fromSlot.Item,toSlot.Item);
+                }
+            }
+            catch
+            {
+                Debug.Log("Ошибка приведения типов");
+            }
+            
+           
+            
+            
+            //Debug.Log($"fromSlot {fromSlot.Type}, toSlot{toSlot.Type}");
+        }
     }
     
     private void UpdateCellsData()
