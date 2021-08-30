@@ -12,6 +12,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public EquipmentType Type;
     public event Action<ItemSlot, ItemSlot> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
+    public event Action<ItemSlot, ItemSlot> ItemSwapInEquipment;
     
     private CanvasGroup canvasGroup;
     private Canvas canvas;
@@ -67,8 +68,12 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Дроп
     public void OnDrop(PointerEventData eventData)
     {
+        
         MouseData.ToSlot = this;
-        ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
+        if (MouseData.FromSlot.Type == EquipmentType.All && MouseData.ToSlot.Type == EquipmentType.All)
+        {
+            ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
+        }
         Destroy(MouseData.Icon);
         MouseData.ClearData();
     }
