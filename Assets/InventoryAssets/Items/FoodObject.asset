@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Data:
     ID: 0
-    Name: 
+    Name: FoodObject
     Amount: 1
   MaxStuckSize: 5
   StackAble: 1

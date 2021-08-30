@@ -46,7 +46,7 @@ public class UIInventory : MonoBehaviour
         for (int i = 0; i < Slots.Length; i++)
         {
             GameObject cell = Instantiate(inventoryCellPrefab, this.transform);
-            cell.GetComponent<ItemSlot>().Type = SlotType.All;
+            cell.GetComponent<ItemSlot>().Type = EquipmentType.All;
             Slots[i] = cell.GetComponent<ItemSlot>();
             Slots[i].ItemNeedSwap += SwapItemOnInterface;
             Slots[i].ItemRemoved += RemoveItemInContainer;
