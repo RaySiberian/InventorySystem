@@ -36,7 +36,7 @@ public class Container : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            Debug.Log(Database.GetItemByID[Inventory[0].ID]);
+            ContainerUpdated?.Invoke();
         }
     }
 
@@ -156,6 +156,12 @@ public class Container : MonoBehaviour
 
     public void SwapItemsInInventory(Item item1, Item item2)
     {
+        if (CheckForStack(item1,item2))
+        {
+            ContainerUpdated?.Invoke();
+            return;
+        }
+        
         int pos1 = 0;
         int pos2 = 0;
 
@@ -178,6 +184,57 @@ public class Container : MonoBehaviour
         ContainerUpdated?.Invoke();
     }
 
+    private bool CheckForStack(Item fromSlot, Item toSlot)
+    {
+        //TODO нечеловеческий костыль 
+        {
+            bool fromSlotStackable = true;
+            bool toSlotStackable = true;
+        
+            if (fromSlot.ID != -1)
+            {
+                fromSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+        
+            if (toSlot.ID != -1)
+            {
+                toSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+
+            if (!fromSlotStackable || !toSlotStackable)
+            {
+                return false;
+            }
+        }
+        
+        if (fromSlot.ID != toSlot.ID)
+        {
+            return false;
+        }
+
+        if (toSlot.Amount == FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            return false;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount <= FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            toSlot.Amount = toSlot.Amount + fromSlot.Amount;
+            Inventory[FindItemArrayPosition(fromSlot)] = new Item();
+            return true;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount > FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            int tempSum = fromSlot.Amount + toSlot.Amount;
+            fromSlot.Amount = tempSum - FindObjectInDatabase(fromSlot).MaxStuckSize;
+            toSlot.Amount = FindObjectInDatabase(toSlot).MaxStuckSize;
+            return true;
+        }
+        
+        return false;
+    }
+    
     private bool IsItemContains(ItemObject itemObject)
     {
         return Inventory.Any(item => item.ID == itemObject.Data.ID);
@@ -251,13 +308,11 @@ public class Container : MonoBehaviour
         //Если содержится, значит item1 - объект из инвентаря
         if (IsItemContains(item1))
         {
-            Debug.Log("Условие 1");
             inventoryItem = item1;
             equipmentItem = item2;
         }
         else
         {
-            Debug.Log("Условие 2");
             inventoryItem = item2;
             equipmentItem = item1;
         }

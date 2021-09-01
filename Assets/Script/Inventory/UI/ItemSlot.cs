@@ -29,7 +29,6 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     {
         isMoved = false;
         
-        Debug.Log("Pointer Down");
         MouseData.Icon = new GameObject();
         
         var rt = MouseData.Icon.AddComponent<RectTransform>();
