@@ -80,8 +80,14 @@ public class UIInventory : MonoBehaviour
         
     }
 
-    private void SwapItemOnInterface(ItemSlot fromSlot, ItemSlot toSlot)
+    private void SwapItemOnInterface(ItemSlot fromSlot, ItemSlot toSlot,ButtonPressed buttonPressed)
     {
+        Debug.Log(buttonPressed);
+        if (buttonPressed == ButtonPressed.RightMouseButton)
+        {
+            playerContainer.SplitOneItem(fromSlot.Item,toSlot.Item);
+            return;
+        }
         playerContainer.SwapItemsInInventory(fromSlot.Item,toSlot.Item);
         UpdateCellsData();
     }

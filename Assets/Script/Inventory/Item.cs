@@ -14,15 +14,11 @@ public class Item
     
     //TODO Добавить конструктор с WorldItem
     
-    public Item(int id)
-    {
-        ID = id;
-    }
-    
     public Item()
     {
         ID = -1;
         Name = "";
         Amount = 0;
     }
+    
 }

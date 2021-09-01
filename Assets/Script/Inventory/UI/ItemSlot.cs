@@ -10,14 +10,14 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public TextMeshProUGUI InventoryCellText;
     public Image InventoryCellIcon;
     public EquipmentType Type;
-    public event Action<ItemSlot, ItemSlot> ItemNeedSwap;
+    public event Action<ItemSlot, ItemSlot, ButtonPressed> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
     public event Action<ItemSlot, ItemSlot> ItemSwapInEquipment;
 
     private bool isMoved;
     private CanvasGroup canvasGroup;
     private Canvas canvas;
-    
+
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
@@ -27,6 +27,11 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     //Нажатие
     public void OnPointerDown(PointerEventData eventData)
     {
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            MouseData.ButtonPressed = ButtonPressed.RightMouseButton;
+        }
+        
         isMoved = false;
         
         MouseData.Icon = new GameObject();
@@ -79,7 +84,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         
         if (MouseData.FromSlot.Type == EquipmentType.All && MouseData.ToSlot.Type == EquipmentType.All)
         {
-            ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
+            ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot,MouseData.ButtonPressed);
         }
         Destroy(MouseData.Icon);
         MouseData.ClearData();
@@ -105,11 +110,19 @@ public static class MouseData
     public static ItemSlot FromSlot;
     public static ItemSlot ToSlot;
     public static GameObject Icon;
-
+    public static ButtonPressed ButtonPressed;
+    
     public static void ClearData()
     {
         FromSlot = null;
         ToSlot = null;
         Icon = null;
+        ButtonPressed = ButtonPressed.None;
     }
+}
+
+public enum ButtonPressed
+{
+    None = 0,
+    RightMouseButton = 1
 }

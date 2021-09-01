@@ -40,6 +40,24 @@ public class Container : MonoBehaviour
         }
     }
 
+    public void SplitOneItem(Item fromSlot, Item toSlot)
+    {
+        if (fromSlot.Amount == 1)
+        {
+            SwapItemsInInventory(fromSlot,toSlot);
+            return;
+        }
+
+        if (toSlot.ID != -1)
+        {
+            return;
+        }
+
+        Inventory[FindItemArrayPosition(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
+        fromSlot.Amount -= 1;
+        ContainerUpdated?.Invoke();
+    }
+    
     public void AddItemInInventory(ItemObject itemObject)
     {
         if (itemObject.StackAble)
