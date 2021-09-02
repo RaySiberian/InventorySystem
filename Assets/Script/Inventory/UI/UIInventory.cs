@@ -81,6 +81,12 @@ public class UIInventory : MonoBehaviour
 
     private void SwapItemToCraft(ItemSlot fromSlot, ItemSlot toSlot, ButtonPressed buttonPressed)
     {
+        if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft && buttonPressed == ButtonPressed.RightMouseButton) 
+        {
+            playerContainer.SplitOneItemCraft(fromSlot.Item,toSlot.Item);
+            return;
+        }
+        
         if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft)
         {
             playerContainer.SwapItemsInCraft(fromSlot.Item,toSlot.Item);
@@ -113,7 +119,7 @@ public class UIInventory : MonoBehaviour
     {
         if (buttonPressed == ButtonPressed.RightMouseButton)
         {
-            playerContainer.SplitOneItem(fromSlot.Item,toSlot.Item);
+            playerContainer.SplitOneItemInventory(fromSlot.Item,toSlot.Item);
             return;
         }
         playerContainer.SwapItemsInInventory(fromSlot.Item,toSlot.Item);

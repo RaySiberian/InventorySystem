@@ -42,7 +42,7 @@ public class Container : MonoBehaviour
         }
     }
 
-    public void SplitOneItem(Item fromSlot, Item toSlot)
+    public void SplitOneItemInventory(Item fromSlot, Item toSlot)
     {
         if (fromSlot.Amount == 1)
         {
@@ -85,7 +85,7 @@ public class Container : MonoBehaviour
     {
         if (FreeSlots != 0 && !IsItemContainsInInventory(itemObject))
         {
-            AddNewItem(itemObject);
+            AddNewItemToFreeSlot(itemObject);
             return;
         }
 
@@ -109,7 +109,7 @@ public class Container : MonoBehaviour
             }
             else
             {
-                AddNewItem(itemObject);
+                AddNewItemToFreeSlot(itemObject);
             }
         }
     }
@@ -121,7 +121,7 @@ public class Container : MonoBehaviour
             return;
         }
 
-        AddNewItem(itemObject);
+        AddNewItemToFreeSlot(itemObject);
     }
 
     //Проверка есть ли неполный стак данного предмета
@@ -147,7 +147,7 @@ public class Container : MonoBehaviour
         return -1;
     }
 
-    private void AddNewItem(ItemObject itemObject)
+    private void AddNewItemToFreeSlot(ItemObject itemObject)
     {
         Inventory[GetFreeSlot()] = new Item(itemObject);
         ContainerUpdated?.Invoke();
@@ -556,7 +556,7 @@ public class Container : MonoBehaviour
             if (IsCraftArraysEquals(CraftStorage, Database.CraftObjects[i].CraftItems))
             {
                 ClearCraft();
-                AddNewItem(Database.CraftObjects[i].CraftedItemObject);
+                AddNewItemToFreeSlot(Database.CraftObjects[i].CraftedItemObject);
             }
         }
     }
@@ -584,6 +584,12 @@ public class Container : MonoBehaviour
 
     public void SwapItemsInCraft(Item fromSlot, Item toSlot)
     {
+        if (CheckForStackCraft(fromSlot, toSlot))
+        {
+            ContainerUpdated?.Invoke();
+            return;
+        }
+        
         int pos1 = 0;
         int pos2 = 0;
 
@@ -605,7 +611,83 @@ public class Container : MonoBehaviour
 
         ContainerUpdated?.Invoke();
     }
+    
+    public void SplitOneItemCraft(Item fromSlot, Item toSlot)
+    {
+        if (fromSlot.Amount == 1)
+        {
+            SwapItemsInCraft(fromSlot, toSlot);
+            return;
+        }
 
+        if (fromSlot.ID == toSlot.ID)
+        {
+            fromSlot.Amount -= 1;
+            toSlot.Amount += 1;
+            ContainerUpdated?.Invoke();
+            return;
+        }
+
+        if (toSlot.ID == -1)
+        {
+            CraftStorage[FindItemArrayPositionCraft(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
+            fromSlot.Amount -= 1;
+            ContainerUpdated?.Invoke();
+            return;
+        }
+    }
+    
+    private bool CheckForStackCraft(Item fromSlot, Item toSlot)
+    {
+        //TODO нечеловеческий костыль 
+        {
+            bool fromSlotStackable = true;
+            bool toSlotStackable = true;
+
+            if (fromSlot.ID != -1)
+            {
+                fromSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+
+            if (toSlot.ID != -1)
+            {
+                toSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+
+            if (!fromSlotStackable || !toSlotStackable)
+            {
+                return false;
+            }
+        }
+
+        if (fromSlot.ID != toSlot.ID)
+        {
+            return false;
+        }
+
+        if (toSlot.Amount == FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            return false;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount <= FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            toSlot.Amount = toSlot.Amount + fromSlot.Amount;
+            CraftStorage[FindItemArrayPositionCraft(fromSlot)] = new Item();
+            return true;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount > FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            int tempSum = fromSlot.Amount + toSlot.Amount;
+            fromSlot.Amount = tempSum - FindObjectInDatabase(fromSlot).MaxStuckSize;
+            toSlot.Amount = FindObjectInDatabase(toSlot).MaxStuckSize;
+            return true;
+        }
+
+        return false;
+    }
+    
     [ContextMenu("Save")]
     public void Save()
     {
