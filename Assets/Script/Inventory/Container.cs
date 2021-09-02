@@ -8,14 +8,42 @@ using UnityEngine;
 public class Container : MonoBehaviour
 {
     private string savePath;
-    public ItemObjectsDatabase Database;
+    public Database Database;
     public SerializableContainer InventoryContainer;
     public ItemObject test;
     public ItemObject test1;
     public Item[] Inventory => InventoryContainer.Inventory;
     public Item[] Equipment => InventoryContainer.Equipment;
     public event Action ContainerUpdated;
+    
+    
+    public CraftObject CraftObject;
 
+    public Item[] craftItems;
+    
+    private void Test()
+    {
+        CraftObject.CraftItems = new Item[9];
+        for (int i = 0; i < CraftObject.CraftItems.Length; i++)
+        {
+            Debug.Log(i);
+            try
+            {
+                CraftObject.CraftItems[i] = CraftObject.CraftItemObjects[i].ItemObject.Data;
+                CraftObject.CraftItems[i].Amount = CraftObject.CraftItemObjects[i].Amount;
+            }
+            catch
+            {
+                CraftObject.CraftItems[i] = new Item();
+            }
+           
+        }
+
+        craftItems = CraftObject.CraftItems;
+    }
+    
+    
+    
     public int FreeSlots
     {
         get { return Inventory.Count(t => t.ID == -1); }
@@ -36,7 +64,7 @@ public class Container : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            ContainerUpdated?.Invoke();
+            Test();
         }
     }
 

@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class UIInventory : MonoBehaviour
 {
-    [SerializeField] private ItemObjectsDatabase database;
+    [SerializeField] private Database database;
     [SerializeField] private GameObject inventoryCellPrefab;
     [SerializeField] private Container playerContainer;
     [SerializeField] private Sprite empty;
     public int InventoryCellsCount;
     public ItemSlot[] InventorySlots;
     public ItemSlot[] EquipmentSlots;
-    
+    public ItemSlot[] CraftingSlots;
     private void OnEnable()
     {
         playerContainer.ContainerUpdated += UpdateCellsData;
@@ -82,7 +82,6 @@ public class UIInventory : MonoBehaviour
 
     private void SwapItemOnInterface(ItemSlot fromSlot, ItemSlot toSlot,ButtonPressed buttonPressed)
     {
-        Debug.Log(buttonPressed);
         if (buttonPressed == ButtonPressed.RightMouseButton)
         {
             playerContainer.SplitOneItem(fromSlot.Item,toSlot.Item);

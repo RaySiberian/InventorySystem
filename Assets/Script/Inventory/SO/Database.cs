@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Database", menuName = "Inventory/Database")]
-public class ItemObjectsDatabase : ScriptableObject
+public class Database : ScriptableObject
 {
     public ItemObject[] ItemObjects;
+    public CraftObject[] CraftObjects;
     public Dictionary<int, ItemObject> GetItemByID;
     private List<ItemObject> tepmList; 
     
