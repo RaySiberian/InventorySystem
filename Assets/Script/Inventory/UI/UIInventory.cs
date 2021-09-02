@@ -83,23 +83,26 @@ public class UIInventory : MonoBehaviour
     {
         if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft && buttonPressed == ButtonPressed.RightMouseButton) 
         {
-            playerContainer.SplitOneItemCraft(fromSlot.Item,toSlot.Item);
+            playerContainer.SplitOneItem(fromSlot.Item,toSlot.Item, ContainerType.Craft);
             return;
         }
-        
+            
         if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft)
         {
-            playerContainer.SwapItemsInCraft(fromSlot.Item,toSlot.Item);
+            playerContainer.SwapItems(fromSlot.Item,toSlot.Item,ContainerType.Craft);
             return;
         }
 
-        if (buttonPressed == ButtonPressed.RightMouseButton)
+        if (fromSlot.SlotType != SlotType.Equipment && toSlot.SlotType != SlotType.Equipment)
         {
-            playerContainer.SplitOneItemInventoryCraft(fromSlot.Item,toSlot.Item);
+            playerContainer.SetItemsInventoryCraft(fromSlot.Item, toSlot.Item);
             return;
         }
         
-        playerContainer.SetItemsInventoryCraft(fromSlot.Item, toSlot.Item);
+        if (buttonPressed == ButtonPressed.RightMouseButton)
+        {
+            playerContainer.SplitOneItemInventoryCraft(fromSlot.Item,toSlot.Item);
+        }
     }
     
     private void RemoveItemInContainer(ItemSlot itemSlot)
@@ -119,10 +122,10 @@ public class UIInventory : MonoBehaviour
     {
         if (buttonPressed == ButtonPressed.RightMouseButton)
         {
-            playerContainer.SplitOneItemInventory(fromSlot.Item,toSlot.Item);
+            playerContainer.SplitOneItem(fromSlot.Item,toSlot.Item,ContainerType.Inventory);
             return;
         }
-        playerContainer.SwapItemsInInventory(fromSlot.Item,toSlot.Item);
+        playerContainer.SwapItems(fromSlot.Item,toSlot.Item,ContainerType.Inventory);
         UpdateCellsData();
     }
 
@@ -138,7 +141,7 @@ public class UIInventory : MonoBehaviour
                 
                 if (equip.EquipmentType == toSlot.Type)
                 {
-                    playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                    playerContainer.SwapItemsInInventoryEquipment(fromSlot.Item,toSlot.Item);
                     return;
                 }
             }
@@ -150,11 +153,10 @@ public class UIInventory : MonoBehaviour
         }
 
         if (toSlot.Type == EquipmentType.All)
-        {   
-            //TODO проверка на пустой Item, сделать метод сравнения
-            if (toSlot.Item.ID == -1)
+        {
+            if (Item.IsEmpty(toSlot.Item))
             {
-                playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                playerContainer.SwapItemsInInventoryEquipment(fromSlot.Item,toSlot.Item);
                 return;
             }
 
@@ -166,7 +168,7 @@ public class UIInventory : MonoBehaviour
                 
                 if (equip.EquipmentType == fromSlot.Type || toSlot.Item == new Item())
                 {
-                    playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
+                    playerContainer.SwapItemsInInventoryEquipment(fromSlot.Item,toSlot.Item);
                 }
             }
             catch 

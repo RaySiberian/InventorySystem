@@ -20,5 +20,9 @@ public class Item
         Name = "";
         Amount = 0;
     }
-    
+
+    public static bool IsEmpty(Item item)
+    {
+        return item.ID == -1;
+    }
 }
