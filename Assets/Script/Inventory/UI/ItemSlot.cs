@@ -85,7 +85,6 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         if (MouseData.FromSlotType == SlotType.Craft || MouseData.ToSlotType == SlotType.Craft)
         {
             ItemSwapInCraft?.Invoke(MouseData.FromSlot,MouseData.ToSlot,MouseData.ButtonPressed);
-            Debug.Log("Сработало событие");
             Destroy(MouseData.Icon);
             MouseData.ClearData();
             return;

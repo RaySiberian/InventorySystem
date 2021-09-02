@@ -17,7 +17,7 @@ public class Container : MonoBehaviour
 
     public Item[] CraftStorage = new Item[9];
     public event Action ContainerUpdated;
-    
+
     public int FreeSlots
     {
         get { return Inventory.Count(t => t.ID == -1); }
@@ -38,7 +38,7 @@ public class Container : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            MakeCraft();
+            CraftItem();
         }
     }
 
@@ -46,20 +46,23 @@ public class Container : MonoBehaviour
     {
         if (fromSlot.Amount == 1)
         {
-            SwapItemsInInventory(fromSlot,toSlot);
+            SwapItemsInInventory(fromSlot, toSlot);
             return;
         }
 
-        if (toSlot.ID != -1)
+        if (fromSlot.ID == toSlot.ID)
         {
+            fromSlot.Amount -= 1;
+            toSlot.Amount += 1;
+            ContainerUpdated?.Invoke();
             return;
         }
-
+        
         Inventory[FindItemArrayPositionInventory(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
         fromSlot.Amount -= 1;
         ContainerUpdated?.Invoke();
     }
-    
+
     public void AddItemInInventory(ItemObject itemObject)
     {
         if (itemObject.StackAble)
@@ -159,6 +162,7 @@ public class Container : MonoBehaviour
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -171,9 +175,10 @@ public class Container : MonoBehaviour
                 return i;
             }
         }
+
         return -1;
     }
-    
+
     public void RemoveItemFromInventory(Item item)
     {
         for (int i = 0; i < Inventory.Length; i++)
@@ -189,12 +194,12 @@ public class Container : MonoBehaviour
 
     public void SwapItemsInInventory(Item item1, Item item2)
     {
-        if (CheckForStack(item1,item2))
+        if (CheckForStack(item1, item2))
         {
             ContainerUpdated?.Invoke();
             return;
         }
-        
+
         int pos1 = 0;
         int pos2 = 0;
 
@@ -223,12 +228,12 @@ public class Container : MonoBehaviour
         {
             bool fromSlotStackable = true;
             bool toSlotStackable = true;
-        
+
             if (fromSlot.ID != -1)
             {
                 fromSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
             }
-        
+
             if (toSlot.ID != -1)
             {
                 toSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
@@ -239,7 +244,7 @@ public class Container : MonoBehaviour
                 return false;
             }
         }
-        
+
         if (fromSlot.ID != toSlot.ID)
         {
             return false;
@@ -264,15 +269,15 @@ public class Container : MonoBehaviour
             toSlot.Amount = FindObjectInDatabase(toSlot).MaxStuckSize;
             return true;
         }
-        
+
         return false;
     }
-    
+
     private bool IsItemContainsInInventory(ItemObject itemObject)
     {
         return Inventory.Any(item => item.ID == itemObject.Data.ID);
     }
-    
+
     private bool IsItemContainsInInventory(Item item)
     {
         return Inventory.Any(t => t == item);
@@ -330,7 +335,6 @@ public class Container : MonoBehaviour
     {
         Equipment[GetEquipmentSlot(item)] = new Item();
         ContainerUpdated?.Invoke();
-        
     }
 
     public void SwapItemsInContainers(Item item1, Item item2)
@@ -352,7 +356,6 @@ public class Container : MonoBehaviour
 
         if (inventoryItem.ID == -1)
         {
-           
             RemoveEquipment(equipmentItem);
             Inventory[FindItemArrayPositionInventory(inventoryItem)] = equipmentItem;
             ContainerUpdated?.Invoke();
@@ -361,40 +364,196 @@ public class Container : MonoBehaviour
 
         if (equipmentItem.ID == -1)
         {
-         
             SetEquipment(inventoryItem);
             Inventory[FindItemArrayPositionInventory(inventoryItem)] = new Item();
             ContainerUpdated?.Invoke();
             return;
         }
-        
-    
+
+
         SetEquipment(inventoryItem);
         Inventory[FindItemArrayPositionInventory(inventoryItem)] = equipmentItem;
-        
+
         ContainerUpdated?.Invoke();
     }
 
-    public void SetItemToCraftFromInventory(Item fromSlot, Item toSlot)
+    public void SetItemsInventoryCraft(Item fromSlot, Item toSlot)
     {
-        Inventory[FindItemArrayPositionInventory(fromSlot)] = toSlot;
-        CraftStorage[FindItemArrayPositionCraft(toSlot)] = fromSlot;
+        if (IsItemContainsInInventory(fromSlot))
+        {
+            if (CheckForStackInventoryCraft(fromSlot, toSlot, true))
+            {
+                ContainerUpdated?.Invoke();
+                return;
+            }
+
+            Inventory[FindItemArrayPositionInventory(fromSlot)] = toSlot;
+            CraftStorage[FindItemArrayPositionCraft(toSlot)] = fromSlot;
+        }
+        else
+        {
+            if (CheckForStackInventoryCraft(fromSlot, toSlot, false))
+            {
+                ContainerUpdated?.Invoke();
+                return;
+            }
+
+            Inventory[FindItemArrayPositionInventory(toSlot)] = fromSlot;
+            CraftStorage[FindItemArrayPositionCraft(fromSlot)] = toSlot;
+        }
+
         ContainerUpdated?.Invoke();
     }
 
-    public void SetItemToInventoryFromCraft(Item fromSlot, Item toSlot)
+    private bool CheckForStackInventoryCraft(Item fromSlot, Item toSlot, bool itemFromInventory)
     {
-        
-        Inventory[FindItemArrayPositionInventory(toSlot)] = fromSlot;
-        CraftStorage[FindItemArrayPositionCraft(fromSlot)] = toSlot;
+        //TODO нечеловеческий костыль 
+        {
+            bool fromSlotStackable = true;
+            bool toSlotStackable = true;
+
+            if (fromSlot.ID != -1)
+            {
+                fromSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+
+            if (toSlot.ID != -1)
+            {
+                toSlotStackable = FindObjectInDatabase(fromSlot).StackAble;
+            }
+
+            if (!fromSlotStackable || !toSlotStackable)
+            {
+                return false;
+            }
+        }
+
+        if (fromSlot.ID != toSlot.ID)
+        {
+            return false;
+        }
+
+        if (toSlot.Amount == FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            return false;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount <= FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            toSlot.Amount = toSlot.Amount + fromSlot.Amount;
+            if (itemFromInventory)
+            {
+                Inventory[FindItemArrayPositionInventory(fromSlot)] = new Item();
+            }
+            else
+            {
+                CraftStorage[FindItemArrayPositionCraft(fromSlot)] = new Item();
+            }
+
+            return true;
+        }
+
+        if (fromSlot.Amount + toSlot.Amount > FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            int tempSum = fromSlot.Amount + toSlot.Amount;
+            fromSlot.Amount = tempSum - FindObjectInDatabase(fromSlot).MaxStuckSize;
+            toSlot.Amount = FindObjectInDatabase(toSlot).MaxStuckSize;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void SplitOneItemInventoryCraft(Item fromSlot, Item toSlot)
+    {
+        if (IsItemContainsInInventory(fromSlot))
+        {
+            if (fromSlot.ID == toSlot.ID || toSlot.ID == -1)
+            {
+                if (CheckForSplitStackInventoryCraft(fromSlot, toSlot, true))
+                {
+                    return;
+                }
+
+                Inventory[FindItemArrayPositionInventory(fromSlot)].Amount -= 1;
+                CraftStorage[FindItemArrayPositionCraft(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
+            }
+        }
+        else
+        {
+            if (fromSlot.ID == toSlot.ID || toSlot.ID == -1)
+            {
+                if (CheckForSplitStackInventoryCraft(fromSlot, toSlot, false))
+                {
+                    return;
+                }
+
+                CraftStorage[FindItemArrayPositionCraft(fromSlot)].Amount -= 1;
+                Inventory[FindItemArrayPositionInventory(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
+            }
+        }
+
         ContainerUpdated?.Invoke();
     }
 
-    private void MakeCraft()
+    private bool CheckForSplitStackInventoryCraft(Item fromSlot, Item toSlot, bool isItemInInventory)
+    {
+        if (toSlot.ID == -1)
+        {
+            return false;
+        }
+
+        if (!FindObjectInDatabase(toSlot).StackAble)
+        {
+            return false;
+        }
+
+        if (toSlot.ID != fromSlot.ID)
+        {
+            return false;
+        }
+
+        if (toSlot.Amount == FindObjectInDatabase(toSlot).MaxStuckSize)
+        {
+            return false;
+        }
+
+        if (isItemInInventory)
+        {
+            if (fromSlot.Amount == 1)
+            {
+                Inventory[FindItemArrayPositionInventory(fromSlot)] = new Item();
+                CraftStorage[FindItemArrayPositionCraft(toSlot)].Amount += 1;
+                ContainerUpdated?.Invoke();
+                return true;
+            }
+
+            Inventory[FindItemArrayPositionInventory(fromSlot)].Amount -= 1;
+            CraftStorage[FindItemArrayPositionCraft(toSlot)].Amount += 1;
+        }
+        else
+        {
+            if (fromSlot.Amount == 1)
+            {
+                CraftStorage[FindItemArrayPositionCraft(fromSlot)] = new Item();
+                Inventory[FindItemArrayPositionInventory(toSlot)].Amount += 1;
+                ContainerUpdated?.Invoke();
+                return true;
+            }
+
+            Inventory[FindItemArrayPositionInventory(toSlot)].Amount += 1;
+            CraftStorage[FindItemArrayPositionCraft(fromSlot)].Amount -= 1;
+        }
+
+        ContainerUpdated?.Invoke();
+        return true;
+    }
+
+    private void CraftItem()
     {
         for (int i = 0; i < Database.CraftObjects.Length; i++)
         {
-            if (IsCraftArraysEquals(CraftStorage,Database.CraftObjects[i].CraftItems))
+            if (IsCraftArraysEquals(CraftStorage, Database.CraftObjects[i].CraftItems))
             {
                 ClearCraft();
                 AddNewItem(Database.CraftObjects[i].CraftedItemObject);
@@ -409,7 +568,7 @@ public class Container : MonoBehaviour
             CraftStorage[i] = new Item();
         }
     }
-    
+
     private bool IsCraftArraysEquals(Item[] craftArray, Item[] objectArray)
     {
         for (int i = 0; i < craftArray.Length; i++)
@@ -422,7 +581,7 @@ public class Container : MonoBehaviour
 
         return true;
     }
-    
+
     public void SwapItemsInCraft(Item fromSlot, Item toSlot)
     {
         int pos1 = 0;
@@ -446,7 +605,7 @@ public class Container : MonoBehaviour
 
         ContainerUpdated?.Invoke();
     }
-    
+
     [ContextMenu("Save")]
     public void Save()
     {

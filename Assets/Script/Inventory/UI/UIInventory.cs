@@ -22,6 +22,7 @@ public class UIInventory : MonoBehaviour
             slot.ItemNeedSwap -= SwapItemOnInterface;
             slot.ItemRemoved -= RemoveItemInContainer;
             slot.ItemSwapInEquipment -= SetItemsToEquipment;
+            slot.ItemSwapInCraft += SwapItemToCraft;
         }
 
         foreach (var slot in EquipmentSlots)
@@ -63,6 +64,7 @@ public class UIInventory : MonoBehaviour
             InventorySlots[i].ItemNeedSwap += SwapItemOnInterface;
             InventorySlots[i].ItemRemoved += RemoveItemInContainer;
             InventorySlots[i].ItemSwapInEquipment += SetItemsToEquipment;
+            InventorySlots[i].ItemSwapInCraft += SwapItemToCraft;
         }
 
         foreach (var slot in CraftingSlots)
@@ -79,27 +81,19 @@ public class UIInventory : MonoBehaviour
 
     private void SwapItemToCraft(ItemSlot fromSlot, ItemSlot toSlot, ButtonPressed buttonPressed)
     {
-        Debug.Log($"FromSlot {fromSlot.SlotType} ToSlot {toSlot.SlotType}");
-        
         if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft)
         {
             playerContainer.SwapItemsInCraft(fromSlot.Item,toSlot.Item);
             return;
         }
-        
-        if (toSlot.SlotType == SlotType.Inventory)
+
+        if (buttonPressed == ButtonPressed.RightMouseButton)
         {
-            Debug.Log("Toinventory");
-            playerContainer.SetItemToInventoryFromCraft(fromSlot.Item,toSlot.Item);
+            playerContainer.SplitOneItemInventoryCraft(fromSlot.Item,toSlot.Item);
             return;
         }
-
-        if (toSlot.SlotType == SlotType.Craft)
-        {
-            playerContainer.SetItemToCraftFromInventory(fromSlot.Item,toSlot.Item);
-        }
         
-      
+        playerContainer.SetItemsInventoryCraft(fromSlot.Item, toSlot.Item);
     }
     
     private void RemoveItemInContainer(ItemSlot itemSlot)
