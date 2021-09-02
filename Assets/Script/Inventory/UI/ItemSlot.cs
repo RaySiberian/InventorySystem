@@ -9,10 +9,13 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public Item Item;
     public TextMeshProUGUI InventoryCellText;
     public Image InventoryCellIcon;
+    //ToDo Переименовать на что-то нормальное
     public EquipmentType Type;
+    public SlotType SlotType;
     public event Action<ItemSlot, ItemSlot, ButtonPressed> ItemNeedSwap;
     public event Action<ItemSlot> ItemRemoved;
     public event Action<ItemSlot, ItemSlot> ItemSwapInEquipment;
+    public event Action<ItemSlot, ItemSlot, ButtonPressed> ItemSwapInCraft;
 
     private bool isMoved;
     private CanvasGroup canvasGroup;
@@ -46,6 +49,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         MouseData.Icon.GetComponent<RectTransform>().position = Input.mousePosition;
 
         MouseData.FromSlot = this;
+        MouseData.FromSlotType = this.SlotType;
     }
 
     //Начало движения
@@ -76,7 +80,17 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
     public void OnDrop(PointerEventData eventData)
     {
         MouseData.ToSlot = this;
+        MouseData.ToSlotType = MouseData.ToSlot.SlotType;
 
+        if (MouseData.FromSlotType == SlotType.Craft || MouseData.ToSlotType == SlotType.Craft)
+        {
+            ItemSwapInCraft?.Invoke(MouseData.FromSlot,MouseData.ToSlot,MouseData.ButtonPressed);
+            Debug.Log("Сработало событие");
+            Destroy(MouseData.Icon);
+            MouseData.ClearData();
+            return;
+        }
+        
         if (MouseData.FromSlot.Type != EquipmentType.All || MouseData.ToSlot.Type != EquipmentType.All)
         {
             ItemSwapInEquipment?.Invoke(MouseData.FromSlot,MouseData.ToSlot);
@@ -86,6 +100,7 @@ public class ItemSlot : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, I
         {
             ItemNeedSwap?.Invoke(MouseData.FromSlot,MouseData.ToSlot,MouseData.ButtonPressed);
         }
+        
         Destroy(MouseData.Icon);
         MouseData.ClearData();
     }
@@ -110,6 +125,8 @@ public static class MouseData
     public static ItemSlot FromSlot;
     public static ItemSlot ToSlot;
     public static GameObject Icon;
+    public static SlotType FromSlotType;
+    public static SlotType ToSlotType;
     public static ButtonPressed ButtonPressed;
     
     public static void ClearData()
@@ -118,6 +135,8 @@ public static class MouseData
         ToSlot = null;
         Icon = null;
         ButtonPressed = ButtonPressed.None;
+        FromSlotType = SlotType.Inventory;
+        ToSlotType = SlotType.Inventory;
     }
 }
 
@@ -125,4 +144,11 @@ public enum ButtonPressed
 {
     None = 0,
     RightMouseButton = 1
+}
+
+public enum SlotType
+{
+    Inventory = 0,
+    Craft = 1,
+    Equipment = 2
 }

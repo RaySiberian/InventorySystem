@@ -30,6 +30,11 @@ public class UIInventory : MonoBehaviour
             slot.ItemRemoved -= RemoveItemInContainer;
         }
         
+        foreach (var slot in CraftingSlots)
+        {
+            slot.ItemSwapInCraft -= SwapItemToCraft;
+        }
+        
         playerContainer.ContainerUpdated -= UpdateCellsData;
     }
     
@@ -60,6 +65,11 @@ public class UIInventory : MonoBehaviour
             InventorySlots[i].ItemSwapInEquipment += SetItemsToEquipment;
         }
 
+        foreach (var slot in CraftingSlots)
+        {
+            slot.ItemSwapInCraft += SwapItemToCraft;
+        }
+        
         foreach (var slot in EquipmentSlots)
         {
             slot.ItemSwapInEquipment += SetItemsToEquipment;
@@ -67,6 +77,31 @@ public class UIInventory : MonoBehaviour
         }
     }
 
+    private void SwapItemToCraft(ItemSlot fromSlot, ItemSlot toSlot, ButtonPressed buttonPressed)
+    {
+        Debug.Log($"FromSlot {fromSlot.SlotType} ToSlot {toSlot.SlotType}");
+        
+        if (fromSlot.SlotType == SlotType.Craft && toSlot.SlotType == SlotType.Craft)
+        {
+            playerContainer.SwapItemsInCraft(fromSlot.Item,toSlot.Item);
+            return;
+        }
+        
+        if (toSlot.SlotType == SlotType.Inventory)
+        {
+            Debug.Log("Toinventory");
+            playerContainer.SetItemToInventoryFromCraft(fromSlot.Item,toSlot.Item);
+            return;
+        }
+
+        if (toSlot.SlotType == SlotType.Craft)
+        {
+            playerContainer.SetItemToCraftFromInventory(fromSlot.Item,toSlot.Item);
+        }
+        
+      
+    }
+    
     private void RemoveItemInContainer(ItemSlot itemSlot)
     {
         if (itemSlot.Type == EquipmentType.All)
@@ -116,7 +151,7 @@ public class UIInventory : MonoBehaviour
 
         if (toSlot.Type == EquipmentType.All)
         {   
-            //TODO проверка на пустой Item, сделать перегрузку сравнения
+            //TODO проверка на пустой Item, сделать метод сравнения
             if (toSlot.Item.ID == -1)
             {
                 playerContainer.SwapItemsInContainers(fromSlot.Item,toSlot.Item);
@@ -157,6 +192,13 @@ public class UIInventory : MonoBehaviour
             SetAmount(EquipmentSlots[i],playerContainer.Equipment[i]);
             SetSpriteByDatabase(EquipmentSlots[i]);
         }
+
+        for (int i = 0; i < CraftingSlots.Length; i++)
+        {
+            CraftingSlots[i].Item = playerContainer.CraftStorage[i];
+            SetAmount(CraftingSlots[i],playerContainer.CraftStorage[i]);
+            SetSpriteByDatabase(CraftingSlots[i]);
+        }   
     }
 
     private void SetSpriteByDatabase(ItemSlot itemSlot)

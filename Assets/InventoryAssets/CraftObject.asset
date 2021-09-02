@@ -12,5 +12,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 399ecda0d4924b14c94f3e165d3aeb3d, type: 3}
   m_Name: CraftObject
   m_EditorClassIdentifier: 
-  CraftItemObjects: []
-  CraftedItemObject: {fileID: 0}
+  CraftSlot:
+  - ItemObject: {fileID: 11400000, guid: eae165e19cb002a48a3042c5f7df7cef, type: 2}
+    Amount: 1
+  - ItemObject: {fileID: 11400000, guid: eae165e19cb002a48a3042c5f7df7cef, type: 2}
+    Amount: 1
+  - ItemObject: {fileID: 11400000, guid: eae165e19cb002a48a3042c5f7df7cef, type: 2}
+    Amount: 1
+  CraftedItemObject: {fileID: 11400000, guid: 3dd2b5b46d9d20e4389ac58457e80bda, type: 2}
+  CraftItems:
+  - ID: 0
+    Name: FoodObject
+    Amount: 1
+  - ID: 0
+    Name: FoodObject
+    Amount: 1
+  - ID: 0
+    Name: FoodObject
+    Amount: 1
+  - ID: -1
+    Name: 
+    Amount: 0
+  - ID: -1
+    Name: 
+    Amount: 0
+  - ID: -1
+    Name: 
+    Amount: 0
+  - ID: -1
+    Name: 
+    Amount: 0
+  - ID: -1
+    Name: 
+    Amount: 0
+  - ID: -1
+    Name: 
+    Amount: 0

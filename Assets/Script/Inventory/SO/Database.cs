@@ -28,8 +28,31 @@ public class Database : ScriptableObject
         {
             GetItemByID.Add(item.Data.ID,item);
         }
+        
+        SetCraftArray();
     }
 
+    private void SetCraftArray()
+    {
+        foreach (var t in CraftObjects)
+        {
+            t.CraftItems = new Item[9];
+            for (int j = 0; j < t.CraftItems.Length; j++)
+            {
+                try
+                {
+                    t.CraftItems[j] = t.CraftSlot[j].ItemObject.Data;
+                    t.CraftItems[j].Amount = t.CraftSlot[j].Amount;
+                }
+                catch
+                {
+                    t.CraftItems[j] = new Item();
+                }
+           
+            }
+        }
+    }
+    
     private void CheckContainer()
     {
         foreach (var t in ItemObjects)

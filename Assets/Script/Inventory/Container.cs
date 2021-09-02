@@ -14,35 +14,9 @@ public class Container : MonoBehaviour
     public ItemObject test1;
     public Item[] Inventory => InventoryContainer.Inventory;
     public Item[] Equipment => InventoryContainer.Equipment;
+
+    public Item[] CraftStorage = new Item[9];
     public event Action ContainerUpdated;
-    
-    
-    public CraftObject CraftObject;
-
-    public Item[] craftItems;
-    
-    private void Test()
-    {
-        CraftObject.CraftItems = new Item[9];
-        for (int i = 0; i < CraftObject.CraftItems.Length; i++)
-        {
-            Debug.Log(i);
-            try
-            {
-                CraftObject.CraftItems[i] = CraftObject.CraftItemObjects[i].ItemObject.Data;
-                CraftObject.CraftItems[i].Amount = CraftObject.CraftItemObjects[i].Amount;
-            }
-            catch
-            {
-                CraftObject.CraftItems[i] = new Item();
-            }
-           
-        }
-
-        craftItems = CraftObject.CraftItems;
-    }
-    
-    
     
     public int FreeSlots
     {
@@ -64,7 +38,7 @@ public class Container : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F3))
         {
-            Test();
+            MakeCraft();
         }
     }
 
@@ -81,7 +55,7 @@ public class Container : MonoBehaviour
             return;
         }
 
-        Inventory[FindItemArrayPosition(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
+        Inventory[FindItemArrayPositionInventory(toSlot)] = new Item(FindObjectInDatabase(fromSlot));
         fromSlot.Amount -= 1;
         ContainerUpdated?.Invoke();
     }
@@ -106,7 +80,7 @@ public class Container : MonoBehaviour
 
     private void AddStackableAmount(ItemObject itemObject)
     {
-        if (FreeSlots != 0 && !IsItemContains(itemObject))
+        if (FreeSlots != 0 && !IsItemContainsInInventory(itemObject))
         {
             AddNewItem(itemObject);
             return;
@@ -173,13 +147,26 @@ public class Container : MonoBehaviour
     private void AddNewItem(ItemObject itemObject)
     {
         Inventory[GetFreeSlot()] = new Item(itemObject);
+        ContainerUpdated?.Invoke();
     }
 
-    private int FindItemArrayPosition(Item itemToFind)
+    private int FindItemArrayPositionInventory(Item itemToFind)
     {
         for (int i = 0; i < Inventory.Length; i++)
         {
             if (Inventory[i] == itemToFind)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int FindItemArrayPositionCraft(Item itemToFind)
+    {
+        for (int i = 0; i < CraftStorage.Length; i++)
+        {
+            if (CraftStorage[i] == itemToFind)
             {
                 return i;
             }
@@ -266,7 +253,7 @@ public class Container : MonoBehaviour
         if (fromSlot.Amount + toSlot.Amount <= FindObjectInDatabase(toSlot).MaxStuckSize)
         {
             toSlot.Amount = toSlot.Amount + fromSlot.Amount;
-            Inventory[FindItemArrayPosition(fromSlot)] = new Item();
+            Inventory[FindItemArrayPositionInventory(fromSlot)] = new Item();
             return true;
         }
 
@@ -281,16 +268,16 @@ public class Container : MonoBehaviour
         return false;
     }
     
-    private bool IsItemContains(ItemObject itemObject)
+    private bool IsItemContainsInInventory(ItemObject itemObject)
     {
         return Inventory.Any(item => item.ID == itemObject.Data.ID);
     }
     
-    private bool IsItemContains(Item item)
+    private bool IsItemContainsInInventory(Item item)
     {
         return Inventory.Any(t => t == item);
     }
-    
+
     private Item FindItemInInventory(ItemObject itemObject)
     {
         return Inventory.FirstOrDefault(item => item.ID == itemObject.Data.ID);
@@ -352,7 +339,7 @@ public class Container : MonoBehaviour
         Item equipmentItem;
         Item empty = new Item();
         //Если содержится, значит item1 - объект из инвентаря
-        if (IsItemContains(item1))
+        if (IsItemContainsInInventory(item1))
         {
             inventoryItem = item1;
             equipmentItem = item2;
@@ -367,7 +354,7 @@ public class Container : MonoBehaviour
         {
            
             RemoveEquipment(equipmentItem);
-            Inventory[FindItemArrayPosition(inventoryItem)] = equipmentItem;
+            Inventory[FindItemArrayPositionInventory(inventoryItem)] = equipmentItem;
             ContainerUpdated?.Invoke();
             return;
         }
@@ -376,18 +363,90 @@ public class Container : MonoBehaviour
         {
          
             SetEquipment(inventoryItem);
-            Inventory[FindItemArrayPosition(inventoryItem)] = new Item();
+            Inventory[FindItemArrayPositionInventory(inventoryItem)] = new Item();
             ContainerUpdated?.Invoke();
             return;
         }
         
     
         SetEquipment(inventoryItem);
-        Inventory[FindItemArrayPosition(inventoryItem)] = equipmentItem;
+        Inventory[FindItemArrayPositionInventory(inventoryItem)] = equipmentItem;
         
         ContainerUpdated?.Invoke();
     }
 
+    public void SetItemToCraftFromInventory(Item fromSlot, Item toSlot)
+    {
+        Inventory[FindItemArrayPositionInventory(fromSlot)] = toSlot;
+        CraftStorage[FindItemArrayPositionCraft(toSlot)] = fromSlot;
+        ContainerUpdated?.Invoke();
+    }
+
+    public void SetItemToInventoryFromCraft(Item fromSlot, Item toSlot)
+    {
+        
+        Inventory[FindItemArrayPositionInventory(toSlot)] = fromSlot;
+        CraftStorage[FindItemArrayPositionCraft(fromSlot)] = toSlot;
+        ContainerUpdated?.Invoke();
+    }
+
+    private void MakeCraft()
+    {
+        for (int i = 0; i < Database.CraftObjects.Length; i++)
+        {
+            if (IsCraftArraysEquals(CraftStorage,Database.CraftObjects[i].CraftItems))
+            {
+                ClearCraft();
+                AddNewItem(Database.CraftObjects[i].CraftedItemObject);
+            }
+        }
+    }
+
+    private void ClearCraft()
+    {
+        for (int i = 0; i < CraftStorage.Length; i++)
+        {
+            CraftStorage[i] = new Item();
+        }
+    }
+    
+    private bool IsCraftArraysEquals(Item[] craftArray, Item[] objectArray)
+    {
+        for (int i = 0; i < craftArray.Length; i++)
+        {
+            if (craftArray[i].ID != objectArray[i].ID)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
+    public void SwapItemsInCraft(Item fromSlot, Item toSlot)
+    {
+        int pos1 = 0;
+        int pos2 = 0;
+
+        for (int i = 0; i < CraftStorage.Length; i++)
+        {
+            if (CraftStorage[i] == fromSlot)
+            {
+                pos1 = i;
+            }
+
+            if (CraftStorage[i] == toSlot)
+            {
+                pos2 = i;
+            }
+        }
+
+        CraftStorage[pos1] = toSlot;
+        CraftStorage[pos2] = fromSlot;
+
+        ContainerUpdated?.Invoke();
+    }
+    
     [ContextMenu("Save")]
     public void Save()
     {
